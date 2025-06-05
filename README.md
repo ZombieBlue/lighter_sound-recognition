@@ -1,3 +1,5 @@
+仅用于学习交流
+
 # 数据处理
 
 安装库: pip install librosa numpy soundfile tqdm
