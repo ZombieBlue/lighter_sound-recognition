@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lighter Detection Events</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .timestamp { min-width: 180px; }
+        .confidence { min-width: 100px; }
+    </style>
+</head>
+<body>
+    <h1>Lighter Sound Detection Events</h1>
+    <p>Events are updated automatically every 5 seconds.</p>
+
+    <table id="events-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th class="timestamp">Timestamp</th>
+                <th class="confidence">Confidence</th>
+                <th>Device ID</th>
+            </tr>
+        </thead>
+        <tbody id="events-tbody">
+            <!-- Event rows will be inserted here by JavaScript -->
+            <tr><td colspan="4">Loading events...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const API_URL = '/api/events'; // Relative URL to the backend API
+        const REFRESH_INTERVAL_MS = 5000; // Refresh every 5 seconds
+        const eventsTbody = document.getElementById('events-tbody');
+
+        function formatTimestamp(unixTimestamp) {
+            const date = new Date(unixTimestamp * 1000); // JS expects milliseconds
+            return date.toLocaleString(); // Adjust format as needed
+        }
+
+        async function fetchEvents() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const events = await response.json();
+                displayEvents(events);
+            } catch (error) {
+                console.error("Error fetching events:", error);
+                eventsTbody.innerHTML = '<tr><td colspan="4">Error loading events. Check console.</td></tr>';
+            }
+        }
+
+        function displayEvents(events) {
+            // Clear existing rows
+            eventsTbody.innerHTML = '';
+
+            if (events.length === 0) {
+                eventsTbody.innerHTML = '<tr><td colspan="4">No events detected yet.</td></tr>';
+                return;
+            }
+
+            // Populate table
+            events.forEach(event => {
+                const row = eventsTbody.insertRow();
+                row.insertCell(0).textContent = event.id;
+                row.insertCell(1).textContent = formatTimestamp(event.timestamp);
+                row.insertCell(2).textContent = event.confidence.toFixed(3); // Format confidence
+                row.insertCell(3).textContent = event.device_id;
+            });
+        }
+
+        // --- Initial Load & Periodic Refresh ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchEvents(); // Fetch immediately on page load
+            setInterval(fetchEvents, REFRESH_INTERVAL_MS); // Set up periodic refresh
+        });
+    </script>
+</body>
+</html>

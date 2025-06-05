@@ -1,0 +1,205 @@
+<!--pages/inspector/inspector.wxml-->
+<view class="container">
+  <view class="page-header">
+    <view class="page-header-title">巡检员监控页面</view>
+    <view class="monitor-controls">
+      <view class="monitor-status {{monitoring ? 'active' : ''}}"></view>
+      <button type="primary" size="mini" bindtap="startMonitoring" wx:if="{{!monitoring}}">
+        开始监控
+      </button>
+      <button type="warn" size="mini" bindtap="stopMonitoring" wx:else>
+        停止监控
+      </button>
+    </view>
+  </view>
+  
+  <view class="main-content">
+    <!-- 高风险事件卡片 -->
+    <view class="card event-card">
+      <view class="card-header">
+        <view class="card-title">最近高风险事件</view>
+        <view class="tag {{monitoring ? 'tag-success' : 'tag-info'}}">
+          {{monitoring ? '实时监控中' : '监控已停止'}}
+        </view>
+      </view>
+      
+      <view class="table-container" wx:if="{{events.length > 0}}">
+        <view class="table-header">
+          <view class="table-cell-sm">ID</view>
+          <view class="table-cell-md">时间</view>
+          <view class="table-cell-sm">地点</view>
+          <view class="table-cell-md">置信度</view>
+          <view class="table-cell-sm">风险级别</view>
+          <view class="table-cell-sm">操作</view>
+        </view>
+        
+        <scroll-view scroll-y="true" style="height: 500rpx;">
+          <block wx:for="{{events}}" wx:key="id" wx:if="{{tools.isHighRisk(item.risk_level)}}">
+            <view class="table-row">
+              <view class="table-cell-sm">{{item.id}}</view>
+              <view class="table-cell-md">{{item.formattedTime}}</view>
+              <view class="table-cell-sm">{{item.location}}</view>
+              <view class="table-cell-md">
+                <view class="progress-container">
+                  <view class="progress-bar" style="width: {{item.confidence * 100}}%; background-color: {{tools.getConfidenceColor(item.confidence)}}"></view>
+                  <text class="progress-text">{{tools.formatConfidence(item.confidence * 100)}}</text>
+                </view>
+              </view>
+              <view class="table-cell-sm">
+                <view class="tag tag-{{tools.getRiskLevelType(item.risk_level)}}">
+                  {{tools.formatRiskLevel(item.risk_level)}}
+                </view>
+              </view>
+              <view class="table-cell-sm">
+                <button 
+                  class="mini-btn"
+                  size="mini" 
+                  type="primary" 
+                  disabled="{{item.handled === 1}}"
+                  loading="{{item.handling}}"
+                  data-event="{{item}}"
+                  bindtap="markAsHandled"
+                >
+                  <block wx:if="{{item.handled === 1}}">已处理</block>
+                  <block wx:elif="{{item.handling}}">处理中</block>
+                  <block wx:else>处理</block>
+                </button>
+              </view>
+            </view>
+          </block>
+        </scroll-view>
+      </view>
+      
+      <view class="empty-container" wx:else>
+        <icon type="info" size="45"></icon>
+        <text>暂无高风险事件</text>
+      </view>
+    </view>
+    
+    <!-- 监控状态卡片 -->
+    <view class="card status-card">
+      <view class="card-header">
+        <view class="card-title">监控状态</view>
+      </view>
+      
+      <view class="status-info">
+        <view class="status-item">
+          <text class="label">监控状态：</text>
+          <view class="tag {{monitoring ? 'tag-success' : 'tag-info'}}">
+            {{monitoring ? '监控中' : '已停止'}}
+          </view>
+        </view>
+        <view class="status-item">
+          <text class="label">刷新间隔：</text>
+          <text class="value">{{monitoring ? '3秒' : '--'}}</text>
+        </view>
+        <view class="status-item">
+          <text class="label">已处理事件：</text>
+          <text class="value">{{handledCount}}</text>
+        </view>
+        <view class="status-item">
+          <text class="label">待处理事件：</text>
+          <text class="value">{{pendingCount}}</text>
+        </view>
+        <view class="status-item">
+          <text class="label">最后更新：</text>
+          <text class="value">{{lastUpdateTime}}</text>
+        </view>
+      </view>
+      
+      <view class="latest-alert" wx:if="{{lastNotification}}">
+        <view class="alert-header">
+          <text class="alert-title">最新通知</text>
+          <text class="alert-time">{{lastNotification.time}}</text>
+        </view>
+        <view class="alert-content">
+          <view><text class="strong">检测地点：</text>{{lastNotification.location}}</view>
+          <view><text class="strong">风险级别：</text>{{lastNotification.riskLevel}}</view>
+          <view><text class="strong">通知时间：</text>{{lastNotification.time}}</view>
+        </view>
+      </view>
+      
+      <view class="action-buttons">
+        <button type="primary" size="mini" bindtap="refreshData" loading="{{loading}}">
+          刷新数据
+        </button>
+        <button type="warn" size="mini" bindtap="testNotification">
+          测试通知
+        </button>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 高风险事件通知弹窗 -->
+<view class="notification-modal" wx:if="{{notificationVisible}}">
+  <view class="notification-bg" bindtap="closeNotification"></view>
+  <view class="notification-content">
+    <view class="notification-header">
+      <text class="notification-title">高风险事件预警</text>
+    </view>
+    
+    <view class="notification-body">
+      <view class="alert-message">
+        <icon type="warn" size="60" color="#F56C6C"></icon>
+        <text class="alert-text">检测到高风险事件！请立即前往检查</text>
+      </view>
+      
+      <view class="event-details">
+        <view><text class="strong">检测地点：</text>{{currentEvent.location}}</view>
+        <view><text class="strong">风险级别：</text>{{tools.formatRiskLevel(currentEvent.risk_level)}}</view>
+        <view><text class="strong">置信度：</text>{{tools.formatConfidence(currentEvent.confidence * 100)}}</view>
+        <view><text class="strong">发生时间：</text>{{currentEvent.formattedTime}}</view>
+      </view>
+    </view>
+    
+    <view class="notification-footer">
+      <button type="primary" bindtap="acknowledgeNotification">确认并前往处理</button>
+    </view>
+  </view>
+</view>
+
+<!-- 工具函数 -->
+<wxs module="tools">
+  function getConfidenceColor(confidence) {
+    if (confidence >= 0.8) return '#67C23A';
+    if (confidence >= 0.6) return '#E6A23C';
+    return '#F56C6C';
+  }
+  
+  function formatConfidence(percentage) {
+    return percentage.toFixed(1) + '%';
+  }
+  
+  function getRiskLevelType(riskLevel) {
+    var level = (riskLevel || '').toLowerCase();
+    if (level === 'high') return 'danger';
+    if (level === 'medium') return 'warning';
+    if (level === 'low') return 'success';
+    return 'info';
+  }
+  
+  function formatRiskLevel(riskLevel) {
+    var level = (riskLevel || '').toLowerCase();
+    if (level === 'high') return '高风险';
+    if (level === 'medium') return '中风险';
+    if (level === 'low') return '低风险';
+    return '未知';
+  }
+  
+  function isHighRisk(riskLevel) {
+    return (riskLevel || '').toLowerCase() === 'high';
+  }
+  
+  module.exports = {
+    getConfidenceColor: getConfidenceColor,
+    formatConfidence: formatConfidence,
+    getRiskLevelType: getRiskLevelType,
+    formatRiskLevel: formatRiskLevel,
+    isHighRisk: isHighRisk
+  };
+</wxs>
+
+<view class="logout-container">
+  <button class="logout-btn" bindtap="logout">退出登录</button>
+</view> 

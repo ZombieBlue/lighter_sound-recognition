@@ -1,0 +1,135 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <view class="page-header">
+    <view class="page-header-title">打火机声音实时检测事件</view>
+    <button type="primary" size="mini" bindtap="refreshData">刷新数据</button>
+  </view>
+  
+  <view class="card event-card">
+    <view class="card-header">
+      <view class="card-title">最近检测事件</view>
+      <view class="tag {{autoRefresh ? 'tag-success' : 'tag-info'}}">
+        {{autoRefresh ? '自动刷新：' + refreshInterval + '秒' : '自动刷新已关闭'}}
+      </view>
+    </view>
+    
+    <view class="controls">
+      <switch checked="{{autoRefresh}}" bindchange="handleAutoRefreshChange" color="#409EFF"/>
+      <text class="switch-label">自动刷新</text>
+      
+      <view class="filter-group">
+        <picker bindchange="handleLocationChange" value="{{locationIndex}}" range="{{locationOptions}}">
+          <view class="picker-wrapper">
+            <text class="picker-label">检测地点:</text>
+            <view class="picker">{{locationOptions[locationIndex]}}</view>
+          </view>
+        </picker>
+        
+        <picker bindchange="handleRiskLevelChange" value="{{riskLevelIndex}}" range="{{riskLevelOptions}}" range-key="label">
+          <view class="picker-wrapper">
+            <text class="picker-label">风险级别:</text>
+            <view class="picker">{{riskLevelOptions[riskLevelIndex].label}}</view>
+          </view>
+        </picker>
+      </view>
+    </view>
+    
+    <view class="table-container" wx:if="{{filteredEvents.length > 0}}">
+      <view class="table-header">
+        <view class="table-cell-xs">ID</view>
+        <view class="table-cell-sm">时间</view>
+        <view class="table-cell-sm">置信度</view>
+        <view class="table-cell-xs">设备</view>
+        <view class="table-cell-xs">地点</view>
+        <view class="table-cell-xs">风险</view>
+      </view>
+      
+      <scroll-view scroll-y="true" style="height: 60vh; width: 100%;">
+        <view class="table-scroll-content">
+          <!-- 只显示当前页的数据 -->
+          <block wx:for="{{filteredEvents}}" wx:key="id" wx:if="{{index >= (currentPage-1)*pageSize && index < currentPage*pageSize}}">
+            <view class="table-row">
+              <view class="table-cell-xs">{{item.id}}</view>
+              <view class="table-cell-sm">{{item.formattedTime}}</view>
+              <view class="table-cell-sm">
+                <view class="progress-container">
+                  <view class="progress-bar" style="width: {{item.confidence * 100}}%; background-color: {{tools.getConfidenceColor(item.confidence)}}"></view>
+                  <text class="progress-text">{{tools.formatConfidence(item.confidence * 100)}}</text>
+                </view>
+              </view>
+              <view class="table-cell-xs">{{item.device_id}}</view>
+              <view class="table-cell-xs">{{item.location}}</view>
+              <view class="table-cell-xs">
+                <view class="tag tag-{{tools.getRiskLevelType(item.risk_level)}}">
+                  {{tools.formatRiskLevel(item.risk_level)}}
+                </view>
+              </view>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
+    </view>
+    
+    <view class="empty-container" wx:else>
+      <icon type="info" size="45"></icon>
+      <text>暂无检测事件</text>
+    </view>
+    
+    <view class="pagination">
+      <view class="pagination-info">共 {{filteredEvents.length}} 条</view>
+      <view class="pagination-pages">
+        <view class="pagination-btn {{currentPage <= 1 ? 'disabled' : ''}}" 
+              data-type="prev"
+              bindtap="{{currentPage <= 1 ? '' : 'handlePageChange'}}">
+          上一页
+        </view>
+        <view class="pagination-current">{{currentPage}}/{{Math.ceil(filteredEvents.length / pageSize)}}</view>
+        <view class="pagination-btn {{currentPage >= Math.ceil(filteredEvents.length / pageSize) ? 'disabled' : ''}}"
+              data-type="next"
+              bindtap="{{currentPage >= Math.ceil(filteredEvents.length / pageSize) ? '' : 'handlePageChange'}}">
+          下一页
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="logout-container">
+    <button class="logout-btn" bindtap="logout">退出登录</button>
+  </view>
+</view>
+
+<!-- 工具函数 -->
+<wxs module="tools">
+  function getConfidenceColor(confidence) {
+    if (confidence >= 0.8) return '#67C23A';
+    if (confidence >= 0.6) return '#E6A23C';
+    return '#F56C6C';
+  }
+  
+  function formatConfidence(percentage) {
+    return percentage.toFixed(1) + '%';
+  }
+  
+  function getRiskLevelType(riskLevel) {
+    var level = (riskLevel || '').toLowerCase();
+    if (level === 'high') return 'danger';
+    if (level === 'medium') return 'warning';
+    if (level === 'low') return 'success';
+    return 'info';
+  }
+  
+  function formatRiskLevel(riskLevel) {
+    var level = (riskLevel || '').toLowerCase();
+    if (level === 'high') return '高风险';
+    if (level === 'medium') return '中风险';
+    if (level === 'low') return '低风险';
+    return '未知';
+  }
+  
+  module.exports = {
+    getConfidenceColor: getConfidenceColor,
+    formatConfidence: formatConfidence,
+    getRiskLevelType: getRiskLevelType,
+    formatRiskLevel: formatRiskLevel
+  };
+</wxs> 

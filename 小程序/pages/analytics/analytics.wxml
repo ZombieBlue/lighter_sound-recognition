@@ -1,0 +1,114 @@
+<!--pages/analytics/analytics.wxml-->
+<view class="container">
+  <view class="page-header">
+    <view class="page-header-title">打火机声音事件数据分析</view>
+    <button type="primary" size="mini" bindtap="refreshData">刷新数据</button>
+  </view>
+  
+  <!-- 数据卡片 -->
+  <view class="data-cards">
+    <view class="data-card">
+      <view class="card-title">今日检测总数</view>
+      <view class="data-value">
+        <view class="number">{{statistics.todayCount}}</view>
+        <view class="label">事件</view>
+      </view>
+    </view>
+    
+    <view class="data-card">
+      <view class="card-title">本周检测总数</view>
+      <view class="data-value">
+        <view class="number">{{statistics.weekCount}}</view>
+        <view class="label">事件</view>
+      </view>
+    </view>
+    
+    <view class="data-card">
+      <view class="card-title">平均置信度</view>
+      <view class="data-value">
+        <view class="number">{{statistics.avgConfidence}}%</view>
+        <view class="label">平均</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 图表区域 -->
+  <view class="charts-container">
+    <!-- 每日检测数量趋势 -->
+    <view class="card chart-card">
+      <view class="card-header">
+        <view class="card-title">每日检测数量趋势</view>
+        <radio-group bindchange="handleTimeRangeChange">
+          <radio value="0" checked="{{timeRange === '7'}}">最近7天</radio>
+          <radio value="1" checked="{{timeRange === '30'}}">最近30天</radio>
+        </radio-group>
+      </view>
+      <view class="chart-wrapper">
+        <canvas canvas-id="dailyTrendChart" id="dailyTrendChart" class="chart-canvas"></canvas>
+      </view>
+    </view>
+    
+    <!-- 每小时检测分布 -->
+    <view class="card chart-card">
+      <view class="card-header">
+        <view class="card-title">每小时检测分布</view>
+      </view>
+      <view class="chart-wrapper">
+        <canvas canvas-id="hourlyDistributionChart" id="hourlyDistributionChart" class="chart-canvas"></canvas>
+      </view>
+    </view>
+    
+    <!-- 设备检测分布 -->
+    <view class="card chart-card">
+      <view class="card-header">
+        <view class="card-title">设备检测分布</view>
+      </view>
+      <view class="chart-wrapper">
+        <canvas canvas-id="deviceDistributionChart" id="deviceDistributionChart" class="chart-canvas"></canvas>
+      </view>
+    </view>
+    
+    <!-- 置信度分布 -->
+    <view class="card chart-card">
+      <view class="card-header">
+        <view class="card-title">置信度分布</view>
+      </view>
+      <view class="chart-wrapper">
+        <canvas canvas-id="confidenceDistributionChart" id="confidenceDistributionChart" class="chart-canvas"></canvas>
+      </view>
+    </view>
+    
+    <!-- 检测地点分布 -->
+    <view class="card chart-card">
+      <view class="card-header">
+        <view class="card-title">检测地点分布</view>
+      </view>
+      <view class="chart-wrapper">
+        <canvas canvas-id="locationDistributionChart" id="locationDistributionChart" class="chart-canvas"></canvas>
+      </view>
+    </view>
+    
+    <!-- 风险级别分析 -->
+    <view class="card chart-card">
+      <view class="card-header">
+        <view class="card-title">风险级别分析</view>
+      </view>
+      <view class="chart-wrapper">
+        <canvas canvas-id="riskLevelChart" id="riskLevelChart" class="chart-canvas"></canvas>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 加载指示器 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-bg"></view>
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <view class="loading-text">加载中...</view>
+    </view>
+  </view>
+  
+  <view class="logout-container">
+    <button class="logout-btn" bindtap="logout">退出登录</button>
+  </view>
+</view> 

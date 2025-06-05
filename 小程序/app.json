@@ -1,0 +1,38 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/register/register",
+    "pages/index/index",
+    "pages/analytics/analytics",
+    "pages/inspector/inspector"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#409EFF",
+    "navigationBarTitleText": "打火机声音识别系统",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999",
+    "selectedColor": "#409EFF",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "实时事件"
+      },
+      {
+        "pagePath": "pages/analytics/analytics",
+        "text": "数据分析"
+      },
+      {
+        "pagePath": "pages/inspector/inspector",
+        "text": "巡检员"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+} 

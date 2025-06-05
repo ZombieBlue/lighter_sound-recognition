@@ -1,0 +1,42 @@
+<!-- pages/login/login.wxml -->
+<view class="login-container">
+  <view class="header">
+    <image src="/images/logo.png" mode="aspectFit" class="logo"></image>
+    <text class="title">打火机声音识别系统</text>
+  </view>
+  
+  <view class="form">
+    <view class="form-item">
+      <text class="label">用户名</text>
+      <input 
+        type="text" 
+        placeholder="请输入用户名" 
+        bindinput="onInputUsername"
+        value="{{username}}"
+      />
+    </view>
+    
+    <view class="form-item">
+      <text class="label">密码</text>
+      <input 
+        type="password" 
+        placeholder="请输入密码" 
+        bindinput="onInputPassword"
+        value="{{password}}"
+      />
+    </view>
+    
+    <button 
+      class="login-btn" 
+      type="primary" 
+      bindtap="login"
+      loading="{{isLoading}}"
+      disabled="{{isLoading}}"
+    >登录</button>
+    
+    <view class="register-link">
+      <text>还没有账号？</text>
+      <text class="link" bindtap="goToRegister">立即注册</text>
+    </view>
+  </view>
+</view> 
